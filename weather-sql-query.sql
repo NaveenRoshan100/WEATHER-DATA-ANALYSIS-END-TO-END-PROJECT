@@ -4,7 +4,7 @@ CREATE OR REPLACE STORAGE INTEGRATION weather_integ
   TYPE = EXTERNAL_STAGE
   STORAGE_PROVIDER = 'S3'
   ENABLED = TRUE
-  STORAGE_AWS_ROLE_ARN = 'my-id'
+  STORAGE_AWS_ROLE_ARN = 'arn_url'
   STORAGE_ALLOWED_LOCATIONS = ('s3://weather-histroy-data/', 's3://daily-data-weather-api/',
   's3://forcast-history-data/')
   comment ='continue';
