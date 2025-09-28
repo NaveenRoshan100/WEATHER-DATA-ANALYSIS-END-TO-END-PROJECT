@@ -4,7 +4,7 @@ CREATE OR REPLACE STORAGE INTEGRATION weather_integ
   TYPE = EXTERNAL_STAGE
   STORAGE_PROVIDER = 'S3'
   ENABLED = TRUE
-  STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::id_number:path/'
+  STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::id:path/'
   STORAGE_ALLOWED_LOCATIONS = ('s3://weather-histroy-data/', 's3://daily-data-weather-api/',
   's3://forcast-history-data/')
   comment ='continue';
@@ -114,26 +114,37 @@ FROM @current_data_stage/forcast.csv
 FILE_FORMAT= (TYPE= CSV SKIP_HEADER=1);
 
 -- daily updation
-CREATE OR REPLACE TASK daily_updation
-  WAREHOUSE = ITC_WH
-  SCHEDULE = 'USING CRON 30 0 * * * UTC'  
+CREATE OR REPLACE PROCEDURE daily_refresh()
+RETURNS STRING
+LANGUAGE SQL
 AS
+$$
 BEGIN
-  truncate table astro;
-  truncate table forcast;
-  truncate table forcast_history;
+  TRUNCATE TABLE astro;
+  TRUNCATE TABLE forecast;
+  TRUNCATE TABLE forecast_history;
+
   COPY INTO history_data
   FROM @history_data_stage
-  FILE_FORMAT= (TYPE= CSV SKIP_HEADER=1);
+  FILE_FORMAT = (TYPE = CSV SKIP_HEADER = 1);
 
   COPY INTO forecast
-    FROM @current_data_stage/forecast.csv
-    FILE_FORMAT = (TYPE= CSV SKIP_HEADER=1);
+  FROM @current_data_stage/forecast.csv
+  FILE_FORMAT = (TYPE = CSV SKIP_HEADER = 1);
 
   COPY INTO astro
-    FROM @current_data_stage/astro.csv
-    FILE_FORMAT = (TYPE= CSV SKIP_HEADER=1);
+  FROM @current_data_stage/astro.csv
+  FILE_FORMAT = (TYPE = CSV SKIP_HEADER = 1);
+
+  RETURN 'complete the refresh';
 END;
+$$;
+
+CREATE OR REPLACE TASK daily_updation
+  WAREHOUSE = ITC_WH
+  SCHEDULE = 'USING CRON 30 0 * * * UTC'
+AS
+CALL daily_refresh();
 
 ALTER TASK daily_updation RESUME;
 
