@@ -4,7 +4,7 @@ CREATE OR REPLACE STORAGE INTEGRATION weather_integ
   TYPE = EXTERNAL_STAGE
   STORAGE_PROVIDER = 'S3'
   ENABLED = TRUE
-  STORAGE_AWS_ROLE_ARN = 'arn_url'
+  STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::id_number:path/'
   STORAGE_ALLOWED_LOCATIONS = ('s3://weather-histroy-data/', 's3://daily-data-weather-api/',
   's3://forcast-history-data/')
   comment ='continue';
@@ -113,13 +113,15 @@ COPY INTO forcast
 FROM @current_data_stage/forcast.csv
 FILE_FORMAT= (TYPE= CSV SKIP_HEADER=1);
 
-
 -- daily updation
 CREATE OR REPLACE TASK daily_updation
   WAREHOUSE = ITC_WH
   SCHEDULE = 'USING CRON 30 0 * * * UTC'  
 AS
 BEGIN
+  truncate table astro;
+  truncate table forcast;
+  truncate table forcast_history;
   COPY INTO history_data
   FROM @history_data_stage
   FILE_FORMAT= (TYPE= CSV SKIP_HEADER=1);
